@@ -60,7 +60,16 @@ func ReadVendorCodes(root string) {
 		}
 	}
 
-	for _, code := range vendorCodes {
+	for index, code := range vendorCodes {
+		filePath := filepath.Join("vendor", fmt.Sprintf("%s.json", code))
+		if _, err := os.Stat(filePath); err == nil {
+			// File already exists, skip fetching data
+			fmt.Printf("Skipping %d: %s (file already exists)\n", index, code)
+			continue
+		}
+
+		fmt.Printf("Processing %d: %s\n", index, code)
+
 		url := fmt.Sprintf("https://snappfood.ir/mobile/v2/restaurant/details/dynamic?lat=-1&long=-1&optionalClient=WEBSITE&client=WEBSITE&deviceType=WEBSITE&appVersion=8.1.1&UDID=1351f4cb-a3c7-4033-995e-31776b068f93&vendorCode=%s&locationCacheKey=lat%%3D-1%%26long%%3D-1&show_party=1&fetch-static-data=1&locale=fa", code)
 
 		resp, err := http.Get(url)
@@ -80,12 +89,11 @@ func ReadVendorCodes(root string) {
 		}
 
 		if response.Status {
-			filePath := filepath.Join("vendor", fmt.Sprintf("%s.json", code))
 			if err := ioutil.WriteFile(filePath, body, 0644); err != nil {
 				log.Fatalf("Failed to write file: %v", err)
 			}
 		}
-		
-        time.Sleep(5 * time.Second)
+
+		time.Sleep(5 * time.Second)
 	}
 }
